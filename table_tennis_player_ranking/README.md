@@ -1,0 +1,1 @@
+Source code for the [Fitting the Player Ranking Model: A Maximum Likelihood Approach](https://vzhukov.dev/posts/2025/fitting-the-player-ranking-model-a-maximum-likelihood-approach) article.
