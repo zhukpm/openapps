@@ -1,11 +1,11 @@
 import numpy as np
+from pydantic import BaseModel
 from sklearn.decomposition import TruncatedSVD
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import StratifiedKFold
-from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import NearestNeighbors
 from sklearn.pipeline import make_pipeline
-from pydantic import BaseModel
+from sklearn.preprocessing import StandardScaler
 
 
 class Config(BaseModel, frozen=True):

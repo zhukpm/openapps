@@ -1,26 +1,27 @@
 import asyncio
 import copy
+import csv
+import hashlib
 import logging
 import time
+import warnings
+from pathlib import Path
+from typing import Literal, Sequence, Any, Self, overload
+
+import numpy as np
 import pandas as pd
+from dppy.finite_dpps import FiniteDPP
 from jinja2 import Environment, FileSystemLoader, meta
+from openai import AsyncClient
 from openai.types import CompletionUsage
 from pydantic import BaseModel
-from typing import Literal, Sequence, Any, Self, overload
-from openai import AsyncClient
 from sklearn.decomposition import TruncatedSVD
-from sklearn.metrics import classification_report
-from pathlib import Path
-import hashlib
-import csv
-import numpy as np
 from sklearn.linear_model import LogisticRegression
-from tqdm import tqdm
+from sklearn.metrics import classification_report
 from sklearn_extra.cluster import KMedoids
-import warnings
-from dppy.finite_dpps import FiniteDPP
-from few_shot_optimization_with_ga.importance import get_importance_scores, Config
+from tqdm import tqdm
 
+from few_shot_optimization_with_ga.importance import get_importance_scores, Config
 
 warnings.filterwarnings(
     'ignore',
@@ -892,7 +893,7 @@ class DiverseDPPFewShotModel:
     # k=70, per_class=False, random_seed=42
     # acc 0.657 / f1-macro 0.655
     # k=2, per_class=True, random_seed=42
-    # acc 0.621 / f1-macro 0.618
+    # acc 0.627 / f1-macro 0.621
 
     def __init__(self, k: int = 2, per_class: bool = True):
         self.k = k
@@ -918,19 +919,23 @@ class DiverseDPPFewShotModel:
             for cls in set(y):
                 class_samples = [inp for inp, label in zip(X, y, strict=True) if label == cls]
                 class_embeddings = np.array(await self.embedder.get(class_samples))
-                dpp = FiniteDPP('likelihood', L=(class_embeddings @ class_embeddings.T))
+                normed = class_embeddings / np.linalg.norm(class_embeddings, axis=1, keepdims=True)
+                dpp = FiniteDPP('likelihood', L=(normed @ normed.T))
                 dpp.sample_exact_k_dpp(size=self.k, random_state=random_seed)
                 selected_indices = dpp.list_of_samples[0]
                 for idx in selected_indices:
                     inp = class_samples[idx]
                     self.few_shots.append((inp, cls))
-                    self.messages.extend([
-                        {'role': 'user', 'content': inp},
-                        {'role': 'assistant', 'content': Response(scientific_area=cls).model_dump_json()},
-                    ])
+            np.random.RandomState(random_seed).shuffle(self.few_shots)
+            for inp, cls in self.few_shots:
+                self.messages.extend([
+                    {'role': 'user', 'content': inp},
+                    {'role': 'assistant', 'content': Response(scientific_area=cls).model_dump_json()},
+                ])
         else:
             all_embeddings = np.array(await self.embedder.get(X))
-            dpp = FiniteDPP('likelihood', L=(all_embeddings @ all_embeddings.T))
+            normed = all_embeddings / np.linalg.norm(all_embeddings, axis=1, keepdims=True)
+            dpp = FiniteDPP('likelihood', L=(normed @ normed.T))
             dpp.sample_exact_k_dpp(size=self.k, random_state=random_seed)
             selected_indices = dpp.list_of_samples[0]
             for idx in selected_indices:
@@ -1097,7 +1102,7 @@ async def main():
     # model = LogisticRegressionModel(n_dim=100)
     # model = HardestFewShotModel(k=2, per_class=True)
     # model = DiverseMedoidsFewShotModel(k=2, per_class=True)
-    # model = DiverseDPPFewShotModel(k=70, per_class=False)
+    # model = DiverseDPPFewShotModel(k=2, per_class=True)
     model = ImportanceBasedFewShotModel(
         config=Config(
             num_few_shots=70,

@@ -18,13 +18,8 @@ dependencies = [
     "openai",
     "jinja2",
     "pandas-stubs~=2.3.3",
+    "tabulate"
 ]
-
-
-[[tool.uv.index]]
-name = "azure"
-url = "https://pkgs.dev.azure.com/toloka/_packaging/Python/pypi/simple/"
-default = true
 
 [[tool.uv.index]]
 name = "pypi"
