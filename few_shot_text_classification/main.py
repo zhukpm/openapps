@@ -21,7 +21,7 @@ from sklearn.metrics import classification_report
 from sklearn_extra.cluster import KMedoids
 from tqdm import tqdm
 
-from few_shot_optimization_with_ga.importance import get_importance_scores, Config
+from few_shot_text_classification.importance import get_importance_scores, Config
 
 warnings.filterwarnings(
     'ignore',
