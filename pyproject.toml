@@ -1,0 +1,27 @@
+[project]
+name = "openapps"
+version = "1.0.0"
+description = "A collection of open-source apps and experiments for data science and machine learning. Read more at https://vzhukov.dev"
+requires-python = ">=3.12"
+dependencies = [
+    "dotenv",
+    "numpy<2.0",
+    "pandas",
+    "scikit-learn",
+    "scikit-learn-extra",
+    "scipy",
+    "dppy",
+    "matplotlib",
+    "seaborn",
+    "jupyter",
+    "plotly",
+    "openai",
+    "jinja2",
+    "pandas-stubs~=2.3.3",
+    "tabulate"
+]
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+explicit = true
